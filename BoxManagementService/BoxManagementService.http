@@ -1,0 +1,6 @@
+@BoxManagementService_HostAddress = http://localhost:5133
+
+GET {{BoxManagementService_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
