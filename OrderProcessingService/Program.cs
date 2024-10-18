@@ -1,4 +1,7 @@
 
+using OrderProcessingService.Infra.Interfaces;
+using OrderProcessingService.Infra.Services;
+
 namespace OrderProcessingService
 {
     public class Program
@@ -13,6 +16,8 @@ namespace OrderProcessingService
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
+
+            builder.Services.AddScoped<IPackingAlgorithmService, PackingAlgorithmService>();
 
             var app = builder.Build();
 
