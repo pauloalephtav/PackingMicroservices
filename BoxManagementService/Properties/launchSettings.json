@@ -30,6 +30,8 @@
     },
     "Container (Dockerfile)": {
       "commandName": "Docker",
+      "dockerComposeFile": "../docker-compose.yml",
+      "serviceName": "BoxManagementService",
       "launchBrowser": true,
       "launchUrl": "{Scheme}://{ServiceHost}:{ServicePort}/swagger",
       "environmentVariables": {
