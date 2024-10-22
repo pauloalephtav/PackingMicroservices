@@ -1,4 +1,8 @@
 
+using OrderProcessingService.Infra.Services;
+using PackingAlgorithmService.Infra.Interfaces;
+using PackingAlgorithmService.Services;
+
 namespace PackingAlgorithmService
 {
     public class Program
@@ -13,6 +17,8 @@ namespace PackingAlgorithmService
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
+
+            RegisterServices(builder.Services);
 
             var app = builder.Build();
 
@@ -31,6 +37,12 @@ namespace PackingAlgorithmService
             app.MapControllers();
 
             app.Run();
+        }
+
+        private static void RegisterServices(IServiceCollection services)
+        {
+            services.AddScoped<IBoxManagementService, BoxManagementService>();
+            services.AddScoped<IPackingService, PackingService>();
         }
     }
 }

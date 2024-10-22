@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using OrderProcessingService.Infra.Interfaces;
 using OrderProcessingService.Models.Request;
 using OrderProcessingService.Models.Response;
+using System.Text;
 
 namespace OrderProcessingService.Controllers
 {
@@ -28,7 +29,9 @@ namespace OrderProcessingService.Controllers
         {
             try
             {
-                if (!IsAuthorized(request.SecretKey))
+                var secretKey = Request.Headers.Authorization.ToString();
+
+                if (!IsAuthorized(secretKey))
                 {
                     _logger.LogWarning("Unauthorized request.");
                     return Unauthorized("Invalid SecretKey.");
@@ -59,9 +62,24 @@ namespace OrderProcessingService.Controllers
         // and implement a token based authentication
         private bool IsAuthorized(string secretKey)
         {
-            var validSecretKey = _config["Security:ValidSecretKey"];
+            var key = _config["Security:ValidSecretKey"] ??
+                throw new ApplicationException("SecretKey is not configured.");
 
-            return secretKey == validSecretKey;
+            if (string.IsNullOrEmpty(key))
+            {
+                _logger.LogWarning("SecretKey is not configured.");
+                return false;
+            }
+
+            if (string.IsNullOrEmpty(secretKey))
+            {
+                _logger.LogWarning("SecretKey is not provided by client.");
+                return false;
+            }
+
+            var validSecretKey = Convert.ToBase64String(Encoding.ASCII.GetBytes(key));
+
+            return secretKey == "Basic " + validSecretKey;
         }
     }
 }

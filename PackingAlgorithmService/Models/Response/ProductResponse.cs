@@ -1,4 +1,4 @@
-﻿namespace OrderProcessingService.Models.Response
+﻿namespace PackingAlgorithmService.Models.Response
 {
     public class ProductResponse
     {

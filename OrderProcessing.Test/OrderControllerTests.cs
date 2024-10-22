@@ -1,6 +1,7 @@
 using FluentAssertions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using Moq;
 using OrderProcessingService.Controllers;
 using OrderProcessingService.Infra.Interfaces;
@@ -14,13 +15,15 @@ namespace OrderProcessing.Test
     {
         private readonly Mock<IConfiguration> _configMock;
         private Mock<IPackingAlgorithmService> _packingAlgorithmMock;
+        private Mock<ILogger<OrderController>> _loggerMock;
         private OrderController _orderController;
 
         public OrderControllerTests()
         {
             _configMock = new Mock<IConfiguration>();
             _packingAlgorithmMock = new Mock<IPackingAlgorithmService>();
-            _orderController = new OrderController(_configMock.Object, _packingAlgorithmMock.Object);
+            _loggerMock = new Mock<ILogger<OrderController>>();
+            _orderController = new OrderController(_configMock.Object, _packingAlgorithmMock.Object, _loggerMock.Object);
         }
 
 
@@ -93,7 +96,6 @@ namespace OrderProcessing.Test
         {
             var request = new OrderRequest
             {
-                SecretKey = "validSecretKey",
                 Orders = null
             };
 
@@ -111,7 +113,6 @@ namespace OrderProcessing.Test
         {
             var request = new OrderRequest
             {
-                SecretKey = "validSecretKey",
                 Orders = []
             };
 
@@ -144,7 +145,6 @@ namespace OrderProcessing.Test
         {
             return new OrderRequest
             {
-                SecretKey = secretKey,
                 Orders = [
                     new Order() {
                         OrderId = "1",

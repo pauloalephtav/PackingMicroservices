@@ -30,6 +30,8 @@
     },
     "Container (Dockerfile)": {
       "commandName": "Docker",
+      "dockerComposeFile": "../docker-compose.yml",
+      "serviceName": "PackingAlgorithmService",
       "launchBrowser": true,
       "launchUrl": "{Scheme}://{ServiceHost}:{ServicePort}/swagger",
       "environmentVariables": {

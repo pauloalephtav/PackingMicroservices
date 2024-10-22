@@ -1,7 +1,9 @@
 ﻿using APIGateway.Models;
+using Microsoft.AspNetCore.DataProtection.KeyManagement;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 using System.Text;
 
 namespace APIGateway.Controllers
@@ -29,20 +31,29 @@ namespace APIGateway.Controllers
                 return Unauthorized();
             }
 
-            var tokenString = GenerateJWT();
+            var tokenString = GenerateJWT(userLogin.Username);
             return Ok(new { token = tokenString });
         }
 
-        private string GenerateJWT()
+        //TODO: Move this method to a service class
+        private string GenerateJWT(string username)
         {
-            var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Key"]));
-            var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
+            var keyBytes = Encoding.ASCII.GetBytes(_config["Jwt:Key"]);
 
-            var token = new JwtSecurityToken(_config["Jwt:Issuer"],
-              _config["Jwt:Audience"],
-              null,
-              expires: DateTime.Now.AddMinutes(Convert.ToDouble(_config["Jwt:ExpireDays"])),
-              signingCredentials: credentials);
+            var securityKey = new SymmetricSecurityKey(keyBytes);
+            var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.Aes128CbcHmacSha256);
+
+            var claims = new List<Claim>
+            {
+                new(ClaimTypes.Name, username)
+            };
+
+            var token = new JwtSecurityToken(
+                issuer: _config["Jwt:Issuer"],
+                audience: _config["Jwt:Audience"],
+                claims: claims,
+                expires: DateTime.Now.AddMinutes(Convert.ToDouble(_config["Jwt:ExpireDays"])),
+                signingCredentials: credentials);
 
             return new JwtSecurityTokenHandler().WriteToken(token);
         }

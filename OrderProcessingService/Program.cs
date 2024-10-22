@@ -17,7 +17,7 @@ namespace OrderProcessingService
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
 
-            builder.Services.AddScoped<IPackingAlgorithmService, PackingAlgorithmService>();
+            RegisterServices(builder.Services);
 
             var app = builder.Build();
 
@@ -36,6 +36,11 @@ namespace OrderProcessingService
             app.MapControllers();
 
             app.Run();
+        }
+
+        private static void RegisterServices(IServiceCollection services)
+        {
+            services.AddScoped<IPackingAlgorithmService, PackingAlgorithmService>();
         }
     }
 }

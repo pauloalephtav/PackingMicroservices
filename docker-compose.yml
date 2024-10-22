@@ -1,0 +1,58 @@
+version: '3.4'
+
+services:      
+  apigateway:
+    image: ${DOCKER_REGISTRY-}apigateway
+    build:
+      context: .
+      dockerfile: APIGateway/Dockerfile
+    networks:
+      - myapinetwork
+    ports:
+      - "32907:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+
+  orderprocessingservice:
+    image: ${DOCKER_REGISTRY-}orderprocessingservice
+    build:
+      context: .
+      dockerfile: OrderProcessingService/Dockerfile
+    networks:
+      - myapinetwork
+    ports:
+      - "32908:80"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+
+  packingalgorithmservice:
+    image: ${DOCKER_REGISTRY-}packingalgorithmservice
+    build:
+      context: .
+      dockerfile: PackingAlgorithmService/Dockerfile
+    networks:
+      - myapinetwork
+    ports:
+      - "32909:80"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+
+  boxmanagementservice:
+    image: ${DOCKER_REGISTRY-}boxmanagementservice
+    build:
+      context: .
+      dockerfile: BoxManagementService/Dockerfile
+    networks:
+      - myapinetwork
+    ports:
+      - "32910:80"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+
+networks:
+  myapinetwork:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.72.0.0/16
+

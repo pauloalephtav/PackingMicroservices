@@ -1,16 +1,19 @@
 using Microsoft.AspNetCore.Mvc;
-using PackingAlgorithmService.Models;
 using PackingAlgorithmService.Models.Request;
+using PackingAlgorithmService.Models.Response;
+using PackingAlgorithmService.Services;
+using System.Text;
 
 namespace PackingAlgorithmService.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    public class PackController : ControllerBase
+    public class PackController(IConfiguration config, ILogger<PackController> logger,
+        IPackingService packingService) : ControllerBase
     {
         private readonly IConfiguration _config = config;
-        private readonly IPackingAlgorithmService _packingAlgorithm = packingAlgorithm;
-        private readonly ILogger<OrderController> _logger = logger;
+        private readonly IPackingService _packingService = packingService;
+        private readonly ILogger<PackController> _logger = logger;
 
         /// <summary>
         /// Pack orders choosing the best matching box for each product
@@ -19,35 +22,44 @@ namespace PackingAlgorithmService.Controllers
         /// <returns>
         /// </returns>
         [HttpPost("Process")]
-        [ProducesResponseType(typeof(OrderResponse), 200)]
+        [ProducesResponseType(typeof(PackingResponse), 200)]
         [ProducesResponseType(400)]
-        public IActionResult PackOrders([FromBody] OrderRequest request)
+        public async Task<IActionResult> PackOrders([FromBody] PackingRequest request)
         {
             try
             {
-                if (!IsAuthorized(request.SecretKey))
+                var secretKey = Request.Headers.Authorization.ToString();
+
+                if (!IsAuthorized(secretKey))
                 {
-                    _logger.LogWarning("Unauthorized request.");
+                    _logger.LogWarning("Unauthorized request.", nameof(PackController));
                     return Unauthorized("Invalid SecretKey.");
                 }
 
                 if (request.Orders == null || request.Orders.Count == 0)
                 {
-                    _logger.LogWarning("No orders to process.");
+                    _logger.LogWarning("No orders to process.", nameof(PackController));
                     return BadRequest("No orders to process.");
                 }
 
-                var orderResponse = new OrderResponse()
-                {
-                    Orders = await _packingAlgorithm.CallPackingAlgorithmService(request.Orders)
-                };
+                var result = new List<PackingResponse>();
 
-                _logger.LogInformation("Orders processed successfully.");
-                return Ok(orderResponse);
+                foreach (var order in request.Orders)
+                {
+                    var packedOrder = await _packingService.PackOrder(order);
+                    result.Add(new PackingResponse
+                    {
+                        OrderId = order.OrderId,
+                        Boxes = packedOrder
+                    });
+                }
+
+                _logger.LogInformation("Orders processed successfully.", nameof(PackController));
+                return Ok(result);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, ex.Message);
+                _logger.LogError(ex, ex.Message, nameof(PackController));
                 return BadRequest(ex.Message);
             }
         }
@@ -56,106 +68,23 @@ namespace PackingAlgorithmService.Controllers
         // and implement a token based authentication
         private bool IsAuthorized(string secretKey)
         {
-            var validSecretKey = _config["Security:ValidSecretKey"];
-
-            return secretKey == validSecretKey;
-        }
-        [HttpPost("PackOrders")]
-        [ProducesResponseType(typeof(OrderProcessingResult), 200)]
-        public IActionResult PackOrders([FromBody] OrderRequest request)
-        {
-            var result = new List<OrderProcessingResult>();
-
-            foreach (var order in orders)
+            var key = _config["Security:ValidSecretKey"];
+            if (string.IsNullOrEmpty(key))
             {
-                var packedOrder = PackOrder(order);
-                result.Add(new OrderProcessingResult
-                {
-                    OrderId = order.Id,
-                    Boxes = packedOrder
-                });
+                _logger.LogWarning("SecretKey is not configured.");
+                return false;
             }
 
-            return Ok(result);
-        }
-
-        private List<Box> PackOrder(Order order)
-        {
-            // Obter a lista de caixas disponíveis do Box Management Service
-            var availableBoxes = GetAvailableBoxes();
-            var packedBoxes = new List<Box>();
-
-            foreach (var product in order.Products)
+            if (string.IsNullOrEmpty(secretKey))
             {
-                var box = FindBoxForProduct(product, availableBoxes);
-                if (box != null)
-                {
-                    box.Products.Add(product);
-                }
-                else
-                {
-                    throw new Exception($"No suitable box found for product {product.Name}");
-                }
+                _logger.LogWarning("SecretKey is not provided by client.");
+                return false;
             }
 
-            return packedBoxes;
+            var validSecretKey = Convert.ToBase64String(Encoding.ASCII.GetBytes(key));
+
+            return secretKey == "Basic " + validSecretKey;
         }
 
-        private List<Box> GetAvailableBoxes()
-        {
-            using (var httpClient = new HttpClient())
-            {
-                httpClient.BaseAddress = new Uri("http://boxmanagementservice/api/boxes");
-                var response = httpClient.GetAsync("/").Result;
-                response.EnsureSuccessStatusCode();
-                return response.Content.ReadAsAsync<List<Box>>().Result;
-            }
-        }
-
-        private Box FindBoxForProduct(Product product, List<Box> availableBoxes)
-        {
-            foreach (var box in availableBoxes)
-            {
-                if (box.Height >= product.Height && box.Width >= product.Width && box.Length >= product.Length)
-                {
-                    return box;
-                }
-            }
-            return null;
-        }
-    }
-
-
-
-
-
-
-    [ApiController]
-    [Route("[controller]")]
-    public class PackController : ControllerBase
-    {
-        private static readonly string[] Summaries = new[]
-        {
-            "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-        };
-
-        private readonly ILogger<PackController> _logger;
-
-        public PackController(ILogger<PackController> logger)
-        {
-            _logger = logger;
-        }
-
-        [HttpGet(Name = "GetWeatherForecast")]
-        public IEnumerable<WeatherForecast> Get()
-        {
-            return Enumerable.Range(1, 5).Select(index => new WeatherForecast
-            {
-                Date = DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-                TemperatureC = Random.Shared.Next(-20, 55),
-                Summary = Summaries[Random.Shared.Next(Summaries.Length)]
-            })
-            .ToArray();
-        }
     }
 }

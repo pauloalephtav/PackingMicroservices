@@ -1,5 +1,4 @@
 using APIGateway.Infra.Interfaces;
-using APIGateway.Models;
 using APIGateway.Models.Request;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -23,6 +22,7 @@ namespace APIGateway.Controllers
         [HttpPost("Process")]
         [ProducesResponseType(typeof(OrderResponse), 200)]
         [ProducesResponseType(400)]
+        [ProducesResponseType(401)]
         public async Task<IActionResult> ProcessOrders([FromBody] OrderRequest request)
         {
             try

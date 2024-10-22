@@ -19,9 +19,13 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "2-MicroServices", "2-MicroS
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "1-API Gateway", "1-API Gateway", "{7C3F468A-B48A-49CA-824E-99B3007848C1}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OrderProcessing.Test", "OrderProcessing.Test\OrderProcessing.Test.csproj", "{B9B2DD1E-83D9-4DF0-8B5C-545C9CF23FFD}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OrderProcessing.Test", "OrderProcessing.Test\OrderProcessing.Test.csproj", "{B9B2DD1E-83D9-4DF0-8B5C-545C9CF23FFD}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BoxManagement.Test", "BoxManagement.Test\BoxManagement.Test.csproj", "{45AD7320-1763-4098-87A2-F1B95BD110CF}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BoxManagement.Test", "BoxManagement.Test\BoxManagement.Test.csproj", "{45AD7320-1763-4098-87A2-F1B95BD110CF}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{AE5D6471-50ED-468D-9D31-700973E1052C}"
+EndProject
+Project("{E53339B2-1760-4266-BCC7-CA923CBCF16C}") = "docker-compose", "docker-compose.dcproj", "{F970F394-F4FF-41C2-965E-0FF39EAF03CD}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -57,6 +61,10 @@ Global
 		{45AD7320-1763-4098-87A2-F1B95BD110CF}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{45AD7320-1763-4098-87A2-F1B95BD110CF}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{45AD7320-1763-4098-87A2-F1B95BD110CF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F970F394-F4FF-41C2-965E-0FF39EAF03CD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F970F394-F4FF-41C2-965E-0FF39EAF03CD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F970F394-F4FF-41C2-965E-0FF39EAF03CD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F970F394-F4FF-41C2-965E-0FF39EAF03CD}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

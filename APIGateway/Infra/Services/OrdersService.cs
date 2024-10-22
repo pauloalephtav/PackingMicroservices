@@ -1,13 +1,16 @@
 ﻿using APIGateway.Infra.Interfaces;
 using APIGateway.Models;
 using APIGateway.Models.Request;
-using System.Text.Json;
+using Newtonsoft.Json;
+using System.Net.Http.Headers;
+using System.Text;
 
 namespace APIGateway.Infra.Services
 {
     public class OrdersService(IConfiguration configuration) : IOrdersService
     {
         private readonly IConfiguration _config = configuration;
+
         private string GetOrderProcessingServiceUrl() => _config["OrderProcessingService:BaseURL"] ??
             throw new ArgumentNullException("BaseURL of OrderProcessingService is not confired.");
 
@@ -17,26 +20,46 @@ namespace APIGateway.Infra.Services
         public async Task<OrderResponse> CallOrderProcessingService(List<Order> orders)
         {
             string apiUrl = GetOrderProcessingServiceUrl();
+            string key = GetOrderProcessingServiceApiKey();
 
-            using (var httpClient = new HttpClient())
-            {
-                httpClient.BaseAddress = new Uri(apiUrl);
-                var response = await httpClient.PostAsJsonAsync("/process", CreateOrderRequest(orders));
-                response.EnsureSuccessStatusCode();
+            string requestJson = JsonConvert.SerializeObject(CreateOrderRequest(orders));
 
-                var jsonString = await response.Content.ReadAsStringAsync();
-                var result = JsonSerializer.Deserialize<OrderResponse>(jsonString);
-                return result;
-            }
+            string content = await SendRequestAsync(apiUrl + "/api/Order/Process", HttpMethod.Post, requestJson, key);
+
+            return JsonConvert.DeserializeObject<OrderResponse>(content);
         }
 
-        private OrderProcessingRequest CreateOrderRequest(List<Order> orders)
+        private static OrderProcessingRequest CreateOrderRequest(List<Order> orders)
         {
             return new OrderProcessingRequest
             {
-                SecretKey = GetOrderProcessingServiceApiKey(),
                 Orders = orders
             };
+        }
+
+        private async Task<string> SendRequestAsync(string url, HttpMethod httpMethod, string requestJson, string apiKey)
+        {
+            using (HttpClient client = new())
+            {
+                client.Timeout = TimeSpan.FromMinutes(5);
+                HttpRequestMessage httpRequest = new(httpMethod, url);
+
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic",
+                        Convert.ToBase64String(Encoding.ASCII.GetBytes(apiKey)));
+
+                if (httpMethod == HttpMethod.Post)
+                    httpRequest.Content = new StringContent(requestJson, Encoding.UTF8, "application/json");
+
+                HttpResponseMessage response = await client.SendAsync(httpRequest);
+                response.EnsureSuccessStatusCode();
+
+                var content = await response.Content.ReadAsStringAsync();
+
+                if (response.IsSuccessStatusCode)
+                    return content;
+                else
+                    throw new ArgumentException($"Erro request: {response.StatusCode} => {content}");
+            }
         }
     }
 }
